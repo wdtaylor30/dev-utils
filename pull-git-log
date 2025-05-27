@@ -28,17 +28,17 @@ if not os.path.isdir(start_dir):
     print(f"Error: the starting directory start_dir is not a directory or does not exist.")
     exit(1)
 
-for repo_dir in (os.path.join(start_dir, d) for d in os.listdir(start_dir) if os.path.isdir(os.path.join(start_dir, d))):
-    # first, check that repo_dir is in fact a repo
+for dir in (os.path.join(start_dir, d) for d in os.listdir(start_dir) if os.path.isdir(os.path.join(start_dir, d))):
+    # first, check that dir is in fact a git repo
     # if check returns without error then run actual command
     # otherwise, just skip. no error msg to avoid cluttering output
 
-    check_command = f"git -C '{repo_dir}' rev-parse --is-inside-working-tree"
+    check_command = f"git -C '{dir}' rev-parse --is-inside-working-tree"
     check_git_dir = subprocess.run(check_command, shell = True, capture_output = True)
 
     if check_git_dir.returncode == 0:
-        print(f"\n --- {repo_dir} ---")
-        log_command = f"git -C '{repo_dir}' log --author='{author_name}' --since='{since_date}' | cat"
+        print(f"\n --- {dir} ---")
+        log_command = f"git -C '{dir}' log --author='{author_name}' --since='{since_date}'"
         log_result = subprocess.run(log_command, shell = True, text = True)
         
 
