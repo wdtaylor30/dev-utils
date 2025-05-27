@@ -1,0 +1,44 @@
+#!/opt/anaconda3/bin/python3
+import os
+import subprocess
+import argparse
+from datetime import datetime, timedelta
+
+# --- cli parsing ---
+# build default start_dir using the USER environment variable 
+default_start_dir = os.path.expanduser(f"/home/{os.environ.get('USER', 'username')}")
+parser = argparse.ArgumentParser(description = "Print git commits by author in subdirectories from the last n days.")
+parser.add_argument("--n_days", type = int, default = 7, help = "Number of days back to search.")
+parser.add_argument("--start_dir", type = str, default = {default_start_dir}, help = f"Starting directory to search for repositories (default: {default_start_dir}")
+parser.add_argument("--author", type = str, help = "Full name of the author to search for. Name should be formatted as it is in the output of 'git log'")
+args = parser.parse_args()
+
+# --- config ---
+start_dir = args.start_dir.pop() # expanduser above generates a set; need to pop it to retrieve the actual path
+author_name = args.author
+n_days = args.n_days
+
+since_date = (datetime.now() - timedelta(days = n_days)).strftime("%Y-%m-%d")
+
+print(f"--- Beginning in {start_dir} ---\n")
+print(f"--- Printing commits by {author_name} since {since_date} ({n_days} days ago) ---")
+
+# --- main logic ---
+if not os.path.isdir(start_dir):
+    print(f"Error: the starting directory start_dir is not a directory or does not exist.")
+    exit(1)
+
+for repo_dir in (os.path.join(start_dir, d) for d in os.listdir(start_dir) if os.path.isdir(os.path.join(start_dir, d))):
+    # first, check that repo_dir is in fact a repo
+    # if check returns without error then run actual command
+    # otherwise, just skip. no error msg to avoid cluttering output
+
+    check_command = f"git -C '{repo_dir}' rev-parse --is-inside-working-tree"
+    check_git_dir = subprocess.run(check_command, shell = True, capture_output = True)
+
+    if check_git_dir.returncode == 0:
+        print(f"\n --- {repo_dir} ---")
+        log_command = f"git -C '{repo_dir}' log --author='{author_name}' --since='{since_date}' | cat"
+        log_result = subprocess.run(log_command, shell = True, text = True)
+        
+
