@@ -23,22 +23,46 @@ since_date = (datetime.now() - timedelta(days = n_days)).strftime("%Y-%m-%d")
 print(f"--- Beginning in {start_dir} ---\n")
 print(f"--- Printing commits by {author_name} since {since_date} ({n_days} days ago) ---")
 
+# --- helper methods ---
+def recurse_for_git(current_path, author, since):
+    """
+    Recursively traverse directories, find git repos, and print their logs.
+
+    Args:
+        current_path (str): The current directory being checked.
+        author (str): The author name for git log.
+        since (str): The date string for git log --since.
+    """
+    # DEBUG: print current path
+    if not os.path.isdir(current_path):
+        return # skip if not directory
+
+    check_command = f"git -C '{current_path}' rev-parse --is-inside-working-tree"
+    check_git_dir = subprocess.run(check_command, shell = True, capture_output = True)
+
+    if check_git_dir.returncode == 0:
+        print(f"\n --- {current_path} ---")
+        log_command = f"git -C '{current_path}' log --author='{author}' --since='{since}'"
+        log_result = subprocess.run(log_command, shell = True, text = True)
+
+        return # this is a git repo and we've printed commit history. no need to recurse
+    else: # recurse
+        try:
+            for item_name in os.listdir(current_path):
+                item_path = os.path.join(current_path, item_name)
+
+                # avoid recursing into hidden dirs
+                if os.path.isdir(item_path) and not item_name.startswith('.'):
+                    recurse_for_git(item_path, author, since_date) # recurse
+        except PermissionError:
+            print(f"Warning: Permission denied for directory: {current_path}")
+        except Exception as e:
+            print(f"An error occured while listing directory {current_path}: {e}")
+
 # --- main logic ---
 if not os.path.isdir(start_dir):
     print(f"Error: the starting directory start_dir is not a directory or does not exist.")
     exit(1)
 
-for dir in (os.path.join(start_dir, d) for d in os.listdir(start_dir) if os.path.isdir(os.path.join(start_dir, d))):
-    # first, check that dir is in fact a git repo
-    # if check returns without error then run actual command
-    # otherwise, just skip. no error msg to avoid cluttering output
-
-    check_command = f"git -C '{dir}' rev-parse --is-inside-working-tree"
-    check_git_dir = subprocess.run(check_command, shell = True, capture_output = True)
-
-    if check_git_dir.returncode == 0:
-        print(f"\n --- {dir} ---")
-        log_command = f"git -C '{dir}' log --author='{author_name}' --since='{since_date}'"
-        log_result = subprocess.run(log_command, shell = True, text = True)
-        
-
+# recurse
+recurse_for_git(current_path = start_dir, author = author_name, since = since_date)
