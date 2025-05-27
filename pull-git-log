@@ -8,9 +8,9 @@ from datetime import datetime, timedelta
 # build default start_dir using the USER environment variable 
 default_start_dir = os.path.expanduser(f"/home/{os.environ.get('USER', 'username')}")
 parser = argparse.ArgumentParser(description = "Print git commits by author in subdirectories from the last n days.")
-parser.add_argument("--n_days", type = int, default = 7, help = "Number of days back to search.")
-parser.add_argument("--start_dir", type = str, default = {default_start_dir}, help = f"Starting directory to search for repositories (default: {default_start_dir}")
-parser.add_argument("--author", type = str, help = "Full name of the author to search for. Name should be formatted as it is in the output of 'git log'")
+parser.add_argument("--n_days", type = int, default = 7, help = "Number of days back to search. Default is 7.")
+parser.add_argument("--start_dir", type = str, default = {default_start_dir}, help = f"Starting directory to search for repositories. Default is {default_start_dir}.")
+parser.add_argument("--author", type = str, default = os.environ.get("USER", "username"), help = "Identifier of the author to search for. This string should uniquely identify either part of or the entire user's name or email address. Default is the user's $USERname on the assumption that it's related to a uniquely-identifying aspeect of their git config.")
 args = parser.parse_args()
 
 # --- config ---
