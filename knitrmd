@@ -11,7 +11,7 @@ fi
 
 rmd_file="$1"
 
-# ensure the R module is loaded
+# if on an hpc like Great Lakes, ensure the R module is loaded
 # Rgeospatial includes both tidyverse and geospatial packages
 module load Rgeospatial/4.4.0
 
