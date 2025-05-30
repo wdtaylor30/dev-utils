@@ -1,0 +1,21 @@
+#!/bin/bash
+# This shell script provides a shorter command for knitting R markdown documents.
+# written by wdt on 3.31.25
+# last edited 4.3.25
+
+# check if a filename was provided as an argument
+if [ -z "$1" ]; then
+        echo "Usage: $0 <your_document.Rmd>"
+        exit 1
+fi
+
+rmd_file="$1"
+
+# ensure the R module is loaded
+# Rgeospatial includes both tidyverse and geospatial packages
+module load Rgeospatial/4.4.0
+
+# execute the rscript command to render the provided rmd
+Rscript -e "rmarkdown::render('$rmd_file')"
+
+echo "Finished rendering $rmd_file"
