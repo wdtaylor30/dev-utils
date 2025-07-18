@@ -1,0 +1,17 @@
+[project]
+name = "dean"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain-mcp-adapters>=0.1.9",
+    "langchain-ollama>=0.3.5",
+    "llama-index>=0.12.49",
+    "llama-index-core>=0.12.49",
+    "llama-index-llms-ollama>=0.6.2",
+    "llama-index-tools-mcp>=0.2.6",
+    "mcp[cli]>=1.12.0",
+    "nest-asyncio>=1.6.0",
+    "ollama>=0.5.1",
+]
