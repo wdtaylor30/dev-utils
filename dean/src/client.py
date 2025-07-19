@@ -1,15 +1,16 @@
-# --- set up llm ---
+import sys
 from llama_index.llms.ollama import Ollama
 from llama_index.core import Settings
+from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
+from llama_index.core.agent.workflow import ReActAgent
+import asyncio
+
+# --- set up llm ---
 llm = Ollama(model = "granite3.3:8b", 
     request_timeout = 120.0,
     context_window = 8192,
     temperature = 0.1)
 Settings.llm = llm
-
-# --- initialize MCP client and build agent ---
-from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
-from llama_index.core.agent.workflow import AgentWorkflow
 
 # --- async setup function for tools (no change needed here) ---
 async def get_tools_async():
@@ -19,19 +20,18 @@ async def get_tools_async():
     return tools
 
 # --- main asynchronous function to run the client ---
-async def main():
+async def setup_agent():
     # --- async call to get tools ---
     tools = await get_tools_async() # Await the async function
 
     for tool in tools:
         print(f"Tool: {tool.metadata.name}\nDescription: {tool.metadata.description}\n")
 
-    # --- initialize and run the agent ---
-    agent = AgentWorkflow.from_tools_or_functions(
-        tools,
-        llm=llm,
-        verbose=True,
-        system_prompt=(
+    agent = ReActAgent(
+        name = "dean",
+        llm = llm,
+        tools = tools,
+        system_prompt = (
             "You are a helpful assistant that can interact with the user's filesystem "
             "within the '~/projects' directory. "
             "You have access to the following tools:\n\n"
@@ -45,29 +45,39 @@ async def main():
             "Thought: I need to use a tool to accomplish the user's request.\n"
             "Action: tool_name\n"
             "Action Input: {'param1': 'value1', 'param2': 'value2'}\n\n"
-            "If you do NOT need to use a tool, respond naturally to the user. "
+            "You may need to infer the values. For example, inputs noting files are relative to the base directory ~/projects. If the user doesn't specify an Action Input, you should be able to populate the Action Input yourself."
+            "If you do NOT need to use a tool, respond naturally to the user. This includes calculations, which you should be able to do without tool use."
             "Do NOT generate code examples. Focus on generating the tool call in the specified format if a tool is needed."
             "Make sure to replace `tool_name` with the actual name of the tool (e.g., `list_directory`)."
             "For `Action Input`, provide a valid JSON dictionary corresponding to the tool's arguments."
+            "Output should be human-readable." 
         )
     )
 
-    print("Agent initialized. Type 'exit' to quit.")
-    print("Note: This agent executes a single workflow run per query and does not maintain chat history automatically.")
-    while True:
-        query = input("You: ")
-        if query.lower() == 'exit':
-            print("Exiting agent.")
-            break
-        try:
-            response = await agent.run(query) # Await the agent.run() call
-            print(f"Agent: {response}")
-        except Exception as e:
-            print(f"Agent Error: {e}")
-            print("Please try again or 'exit' to quit.")
+    return agent
+
+async def main():
+    try:
+        agent = await setup_agent()
+
+        print("Agent initialized. Type 'exit' to quit.")
+        print("Note: This agent executes a single workflow run per query and does not maintain chat history automatically.")
+        
+        while True:
+            query = input("You: ")
+            if query.lower() == 'exit':
+                print("Exiting agent.")
+                break
+
+            response = await agent.run(query)
+            print(f"\n{response}")
+
+    except Exception as e:
+        print(f"Agent Error: {e}")
+        return 1
+    
+    return 0
 
 # --- run the main asynchronous function ---
-import asyncio
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))
