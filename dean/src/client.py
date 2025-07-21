@@ -32,15 +32,17 @@ async def setup_agent():
         llm = llm,
         tools = tools,
         system_prompt = (
-            "You are a helpful assistant that can interact with the user's filesystem "
-            "within the '~/projects' directory. "
+            "You are a helpful assistant that can interact with the user's filesystem, primarily using built-in Unix commands."
             "You have access to the following tools:\n\n"
-            "- `list_directory`: Use this tool to list the contents of a directory. "
-            "   Signature: `list_directory(directory_path: str = '.') -> list[str]`\n"
-            "   Description: When the user asks to see files, list contents, or explore directories, use this tool.\n"
-            "- `read_file`: Use this tool to read the content of a specific file.\n"
-            "   Signature: `read_file(file_path: str) -> str`\n"
-            "   Description: Use this tool to read the content of a specific file.\n\n"
+            # "- `list_directory`: Use this tool to list the contents of a directory. "
+            # "   Signature: `list_directory(directory_path: str = '.') -> list[str]`\n"
+            # "   Description: When the user asks to see files, list contents, or explore directories, use this tool.\n"
+            # "- `read_file`: Use this tool to read the content of a specific file.\n"
+            # "   Signature: `read_file(file_path: str) -> str`\n"
+            # "   Description: Use this tool to read the content of a specific file once you find that file.\n\n"
+            "- `run_shell_command`: Use this tool to run a Unix shell command.\n"
+            "-  Signature: `run_shell_command(command: str, cwd: str = '.') -> dict`\n"
+            "-  Description: Use this tool to interact with the file system with native Unix commands."
             "When you need to use a tool, respond ONLY in the following strict format, without any extra text or conversation:\n"
             "Thought: I need to use a tool to accomplish the user's request.\n"
             "Action: tool_name\n"
@@ -51,7 +53,8 @@ async def setup_agent():
             "Make sure to replace `tool_name` with the actual name of the tool (e.g., `list_directory`)."
             "For `Action Input`, provide a valid JSON dictionary corresponding to the tool's arguments."
             "Output should be human-readable." 
-        )
+        ),
+        verbose = False
     )
 
     return agent
@@ -64,13 +67,13 @@ async def main():
         print("Note: This agent executes a single workflow run per query and does not maintain chat history automatically.")
         
         while True:
-            query = input("You: ")
+            query = input(">: ")
             if query.lower() == 'exit':
                 print("Exiting agent.")
                 break
 
             response = await agent.run(query)
-            print(f"\n{response}")
+            print(f"\n{response}\n")
 
     except Exception as e:
         print(f"Agent Error: {e}")
