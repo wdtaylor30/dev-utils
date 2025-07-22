@@ -1,20 +1,21 @@
 import sys
 from llama_index.llms.ollama import Ollama
 from llama_index.core import Settings
+from llama_index.core.memory import Memory
 from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
 from llama_index.core.agent.workflow import ReActAgent
 import asyncio
 
 # --- set up llm ---
+CONTEXT_WINDOW = 8192 # used in both llm and memory instantiation 
 llm = Ollama(model = "granite3.3:8b", 
     request_timeout = 120.0,
-    context_window = 8192,
+    context_window = CONTEXT_WINDOW,
     temperature = 0.1)
 Settings.llm = llm
 
-# --- async setup function for tools (no change needed here) ---
-async def get_tools_async():
-    mcp_client = BasicMCPClient("http://127.0.0.1:8000/sse")
+# --- async setup function for tools ---
+async def get_tools_async(mcp_client: BasicMCPClient) -> list:
     mcp_tools = McpToolSpec(client = mcp_client)
     tools = await mcp_tools.to_tool_list_async()
     return tools
@@ -22,7 +23,8 @@ async def get_tools_async():
 # --- main asynchronous function to run the client ---
 async def setup_agent():
     # --- async call to get tools ---
-    tools = await get_tools_async() # Await the async function
+    mcp_client = BasicMCPClient("http://127.0.0.1:8000/sse")
+    tools = await get_tools_async(mcp_client) 
 
     for tool in tools:
         print(f"Tool: {tool.metadata.name}\nDescription: {tool.metadata.description}\n")
@@ -34,12 +36,6 @@ async def setup_agent():
         system_prompt = (
             "You are a helpful assistant that can interact with the user's filesystem, primarily using built-in Unix commands."
             "You have access to the following tools:\n\n"
-            # "- `list_directory`: Use this tool to list the contents of a directory. "
-            # "   Signature: `list_directory(directory_path: str = '.') -> list[str]`\n"
-            # "   Description: When the user asks to see files, list contents, or explore directories, use this tool.\n"
-            # "- `read_file`: Use this tool to read the content of a specific file.\n"
-            # "   Signature: `read_file(file_path: str) -> str`\n"
-            # "   Description: Use this tool to read the content of a specific file once you find that file.\n\n"
             "- `run_shell_command`: Use this tool to run a Unix shell command.\n"
             "-  Signature: `run_shell_command(command: str, cwd: str = '.') -> dict`\n"
             "-  Description: Use this tool to interact with the file system with native Unix commands."
@@ -64,15 +60,21 @@ async def main():
         agent = await setup_agent()
 
         print("Agent initialized. Type 'exit' to quit.")
-        print("Note: This agent executes a single workflow run per query and does not maintain chat history automatically.")
-        
+
+        mem = Memory.from_defaults(
+            session_id = 'session', # unique identifier for sql database
+            token_limit = CONTEXT_WINDOW, # at or around the context window
+            token_flush_size = 10, # number of tokens to flush to long-term memory, or drop if no ltm is setup
+            chat_history_token_ratio = 1.0 # ratio of tokens for short- vs long-term memory
+        )
+
         while True:
-            query = input(">: ")
+            query = input("> ")
             if query.lower() == 'exit':
                 print("Exiting agent.")
                 break
 
-            response = await agent.run(query)
+            response = await agent.run(query, memory = mem)
             print(f"\n{response}\n")
 
     except Exception as e:

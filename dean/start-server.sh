@@ -4,3 +4,6 @@ ollama serve &
 
 # start uv venv
 source .venv/bin/activate
+
+# start dean server
+uv run src/server.py
