@@ -34,21 +34,27 @@ async def setup_agent():
         llm = llm,
         tools = tools,
         system_prompt = (
-            "You are a helpful assistant that can interact with the user's filesystem, primarily using built-in Unix commands."
-            "You have access to the following tools:\n\n"
-            "- `run_shell_command`: Use this tool to run a Unix shell command.\n"
-            "-  Signature: `run_shell_command(command: str, cwd: str = '.') -> dict`\n"
-            "-  Description: Use this tool to interact with the file system with native Unix commands."
-            "When you need to use a tool, respond ONLY in the following strict format, without any extra text or conversation:\n"
-            "Thought: I need to use a tool to accomplish the user's request.\n"
-            "Action: tool_name\n"
-            "Action Input: {'param1': 'value1', 'param2': 'value2'}\n\n"
-            "You may need to infer the values. For example, inputs noting files are relative to the base directory ~/projects. If the user doesn't specify an Action Input, you should be able to populate the Action Input yourself."
-            "If you do NOT need to use a tool, respond naturally to the user. This includes calculations, which you should be able to do without tool use."
-            "Do NOT generate code examples. Focus on generating the tool call in the specified format if a tool is needed."
-            "Make sure to replace `tool_name` with the actual name of the tool (e.g., `list_directory`)."
-            "For `Action Input`, provide a valid JSON dictionary corresponding to the tool's arguments."
-            "Output should be human-readable." 
+            """
+            You are a helpful, conversational assistant that can interact with the user's filesystem, primarily using built-in Unix commands.
+            You have access to the following tools:\n\n
+            - `run_shell_command`: Use this tool to run a Unix shell command.\n
+            -  Signature: `run_shell_command(command: str, cwd: str = '.') -> dict`\n
+            -  Description: Use this tool to interact with the file system with native Unix commands.
+            When you need to use a tool, respond ONLY in the following strict format, without any extra text or conversation:\n
+            Thought: I need to use a tool to accomplish the user's request.\n
+            Action: tool_name\n
+            Action Input: {'param1': 'value1', 'param2': 'value2'}\n\n
+            You may need to infer the values. For example, inputs noting files are relative to the base directory ~/projects. If the user doesn't specify an Action Input, you should be able to populate the Action Input yourself.
+            If you do NOT need to use a tool, respond naturally to the user. This includes calculations, which you should be able to do without tool use.
+            Do NOT generate code examples. Focus on generating the tool call in the specified format if a tool is needed.
+            Make sure to replace `tool_name` with the actual name of the tool.
+            For `Action Input`, provide a valid JSON dictionary corresponding to the tool's arguments.
+            Output should be human-readable.
+
+            --- Helpful Hints ---
+            - Changing directories and statefulness: you should keep track of what directory you're in internally. You can do this using `run_shell_command()` after any
+            action that requires you to interact with the filesystem.
+            """
         ),
         verbose = False
     )
@@ -73,12 +79,16 @@ async def main():
             if query.lower() == 'exit':
                 print("Exiting agent.")
                 break
-
-            response = await agent.run(query, memory = mem)
-            print(f"\n{response}\n")
+            
+            try:
+                response = await agent.run(query, memory = mem)
+                print(f"\n{response}\n")
+            except Exception as e:
+                print(f"Agent Error: {e}")
+                continue
 
     except Exception as e:
-        print(f"Agent Error: {e}")
+        print(f"Client Error: {e}")
         return 1
     
     return 0
