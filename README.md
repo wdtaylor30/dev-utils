@@ -8,7 +8,7 @@ Simple utility to knit .rmd file from the command line.
 Does what it says: looks for git repos and pulls commits from the past $n$ days according to a unique identifier, usually the developer's username.
 
 ## get-largest-files
-Crawl the user's filesystem, starting in `.`, to find the top 10 largest files. Useful for when your `home` is full on a shared compute resource, and you have no idea why.
+Crawl the user's filesystem, starting in `.`, to find the top 10 largest files. Useful for when your `/home` is full on a shared compute resource, and you have no idea why.
 
 ## watch-sbatch
 Watch the `$USER`'s `sbatch` job submissions on an HPC like U-M's Great Lakes.
