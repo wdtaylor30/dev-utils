@@ -7,7 +7,12 @@ Simple utility to knit rmd file from the command line
 ## pull-git-log
 Does what it says: looks for git repos and pulls commits from the past $n$ days according to a unique identifier, usually the developer's username.
 
+## get-largest-files
+Gets the top 10 largest files in (.), recursively.
+
+## watch-sbatch
+Watch the $USERs `sbatch` job submissions on an HPC like U-M's Great Lakes.
 ## dean
-Coding assistant built on ollama, named after computer scientist and IBM engineer [Mark Dean](https://en.wikipedia.org/wiki/Mark_Dean_(computer_scientist)). In *very* early development, so I'll have more to say later.
+Coding assistant built on ollama, named after computer scientist and IBM engineer [Mark Dean](https://www.ibm.com/history/mark-dean). In *very* early development, so I'll have more to say later. (Now deprecated, but I may return to the project with a different vision in the future.)
 
 repo created May 2025
