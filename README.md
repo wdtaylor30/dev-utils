@@ -13,6 +13,9 @@ Crawl the user's filesystem, starting in `.`, to find the top 10 largest files. 
 ## watch-sbatch
 Watch the `$USER`'s `sbatch` job submissions on an HPC like U-M's Great Lakes.
 
+## csvout
+Wrapper around a common shell command to pretty-print .csv output in the terminal.
+
 ## dean
 Coding assistant built on ollama, named after computer scientist and IBM engineer [Mark Dean](https://www.ibm.com/history/mark-dean). In *very* early development, so I'll have more to say later. (Now deprecated, but I may return to the project with a different vision in the future.)
 
