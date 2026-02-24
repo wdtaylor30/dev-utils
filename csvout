@@ -1,0 +1,23 @@
+# wrapper to pretty-print csv output
+# (this is a very common command, so not my innovation)
+# wdt
+# 2.24.2026
+
+#!/bin/bash
+if [ -z "$1" ]; then
+    echo "Usage: $0 <filename.csv or .tsv>"
+    exit 1
+fi
+
+if [ ! -f "$1" ]; then
+    echo "Error: File '$1' not found."
+    exit 1
+fi
+
+DELIM=","
+
+if [[ "$1" == *.tsv ]]; then
+    DELIM=$'\t'
+fi
+
+column -s "$DELIM" -t < "$1" | less -S
